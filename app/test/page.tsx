@@ -20,14 +20,26 @@ export default function TestPage() {
   const total = useMemo(()=>sum(answers), [answers]);
   const category = useMemo(()=>interpret(total), [total]);
 
-  useEffect(() => {
-    try {
-      const tg = window.Telegram?.WebApp;
-      tg?.expand();
-      tg?.ready();
-      setInitData(tg?.initData || '');
-    } catch {}
-  }, []);
+useEffect(() => {
+  try {
+    const tg = window.Telegram?.WebApp;
+    tg?.expand();
+    tg?.ready();
+
+    // 1) прямой доступ
+    let data = tg?.initData || '';
+
+    // 2) fallback: взять из location.hash -> tgWebAppData
+    if (!data && typeof window !== 'undefined') {
+      const h = new URLSearchParams(window.location.hash.slice(1));
+      const fromHash = h.get('tgWebAppData');
+      if (fromHash) data = decodeURIComponent(fromHash);
+    }
+
+    setInitData(data);
+  } catch {}
+}, []);
+
 
   const save = async () => {
     setSaving(true);
