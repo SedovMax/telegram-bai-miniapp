@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { verifyInitData } from '@/lib/telegramVerify';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
   try {
