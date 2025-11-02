@@ -4,16 +4,32 @@ import { useEffect, useState } from 'react';
 
 type Item = { created_at: string; score: number; category: string };
 
+declare global { interface Window { Telegram?: any; } }
+
 export default function ChartPage() {
   const [data, setData] = useState<Item[]>([]);
+  const [error, setError] = useState<string>('');
 
   useEffect(()=>{
-    fetch('/api/history').then(r=>r.json()).then(setData).catch(()=>{});
+    const tg = window.Telegram?.WebApp;
+    const initData = tg?.initData || '';
+    fetch('/api/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData })
+    })
+      .then(r=>r.json())
+      .then(d=>{
+        if (Array.isArray(d)) setData(d);
+        else setError(d?.error || 'Ошибка');
+      })
+      .catch(e=>setError(String(e)));
   },[]);
 
   return (
     <main>
       <h2>Динамика</h2>
+      {error && <p style={{ color:'crimson' }}>{error}</p>}
       {data.length === 0 ? <p>Пока нет данных.</p> : <SvgChart items={data} />}
     </main>
   );

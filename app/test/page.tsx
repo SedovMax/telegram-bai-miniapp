@@ -1,18 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { questions } from '@/data/bai';
-import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+declare global { interface Window { Telegram?: any; } }
 
 function sum(arr: number[]) { return arr.reduce((a,b)=>a+b,0); }
-
 function interpret(total: number) {
-  // Диапазоны могут отличаться. Проверь по твоему PDF.
   if (total <= 7) return 'Минимальная';
   if (total <= 15) return 'Лёгкая';
   if (total <= 25) return 'Умеренная';
@@ -22,8 +16,18 @@ function interpret(total: number) {
 export default function TestPage() {
   const [answers, setAnswers] = useState<number[]>(Array(questions.length).fill(0));
   const [saving, setSaving] = useState(false);
+  const [initData, setInitData] = useState<string>('');
   const total = useMemo(()=>sum(answers), [answers]);
   const category = useMemo(()=>interpret(total), [total]);
+
+  useEffect(() => {
+    try {
+      const tg = window.Telegram?.WebApp;
+      tg?.expand();
+      tg?.ready();
+      setInitData(tg?.initData || '');
+    } catch {}
+  }, []);
 
   const save = async () => {
     setSaving(true);
@@ -31,7 +35,7 @@ export default function TestPage() {
       const res = await fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score: total, category })
+        body: JSON.stringify({ score: total, category, initData })
       });
       const j = await res.json();
       alert(j.ok ? 'Сохранено' : ('Ошибка: ' + j.error));
@@ -70,6 +74,7 @@ export default function TestPage() {
         <strong>Сумма: {total}</strong> · <span>{category}</span>
       </div>
       <button disabled={saving} onClick={save} style={{ marginTop: 8 }}>Сохранить результат</button>
+      {!initData && <p style={{ marginTop: 8, color: 'crimson' }}>Открой через WebApp-кнопку в боте, чтобы распознать пользователя.</p>}
     </main>
   );
 }

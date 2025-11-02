@@ -3,20 +3,12 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 
-declare global {
-  interface Window {
-    Telegram?: any;
-  }
-}
+declare global { interface Window { Telegram?: any; } }
 
 export default function Page() {
   useEffect(() => {
-    try {
-      const tg = window.Telegram?.WebApp;
-      tg?.expand();
-      tg?.enableClosingConfirmation();
-      tg?.ready();
-    } catch {}
+    const tg = window.Telegram?.WebApp;
+    try { tg?.expand(); tg?.ready(); } catch {}
   }, []);
 
   return (
