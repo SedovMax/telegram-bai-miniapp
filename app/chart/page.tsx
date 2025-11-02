@@ -10,21 +10,24 @@ export default function ChartPage() {
   const [data, setData] = useState<Item[]>([]);
   const [error, setError] = useState<string>('');
 
-  useEffect(()=>{
-    const tg = window.Telegram?.WebApp;
-    const initData = tg?.initData || '';
-    fetch('/api/history', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData })
-    })
-      .then(r=>r.json())
-      .then(d=>{
-        if (Array.isArray(d)) setData(d);
-        else setError(d?.error || 'Ошибка');
-      })
-      .catch(e=>setError(String(e)));
-  },[]);
+  useEffect(() => {
+  const tg = window.Telegram?.WebApp;
+  let initData = tg?.initData || '';
+  if (!initData && typeof window !== 'undefined') {
+    const h = new URLSearchParams(window.location.hash.slice(1));
+    const fromHash = h.get('tgWebAppData');
+    if (fromHash) initData = decodeURIComponent(fromHash);
+  }
+  fetch('/api/history', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData })
+  })
+    .then(r => r.json())
+    .then(d => { /* как было */ })
+    .catch(e => setError(String(e)));
+}, []);
+
 
   return (
     <main>
